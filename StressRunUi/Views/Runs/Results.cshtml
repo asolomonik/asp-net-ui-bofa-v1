@@ -1,0 +1,26 @@
+@model RunResultsResponse
+
+@{
+    ViewData["Title"] = $"Run #{Model.RunId} results";
+}
+
+<h1>Run #@Model.RunId results</h1>
+<p>Scenario @Model.ScenarioId &middot; @Model.RunDate.ToString("yyyy-MM-dd")</p>
+
+<table class="table table-striped" style="max-width: 400px;">
+    <thead>
+        <tr>
+            <th>Portfolio</th>
+            <th>Loss</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var result in Model.Results)
+        {
+            <tr>
+                <td>@result.PortfolioId</td>
+                <td>@result.Loss.ToString("N2")</td>
+            </tr>
+        }
+    </tbody>
+</table>
