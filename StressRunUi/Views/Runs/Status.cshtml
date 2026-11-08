@@ -1,0 +1,56 @@
+@model int
+
+@{
+    ViewData["Title"] = $"Run #{Model} status";
+}
+
+<h1>Run #@Model</h1>
+
+<p id="status-line">Checking status&hellip;</p>
+<div class="progress" style="max-width: 400px;">
+    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+</div>
+<p id="error-line" class="text-danger"></p>
+
+@section Scripts {
+    <script>
+        const runId = @Model;
+        const statusLine = document.getElementById('status-line');
+        const progressBar = document.getElementById('progress-bar');
+        const errorLine = document.getElementById('error-line');
+
+        async function poll() {
+            try {
+                const response = await fetch(`/runs/${runId}/status/data`, { cache: 'no-store' });
+                if (response.status === 404) {
+                    statusLine.textContent = 'Run not found.';
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`status ${response.status}`);
+                }
+
+                const data = await response.json();
+                statusLine.textContent = `Status: ${data.status} (${data.percentComplete}%)`;
+                progressBar.style.width = `${data.percentComplete}%`;
+
+                if (data.status === 'Complete') {
+                    window.location.href = `/runs/${runId}/results`;
+                    return;
+                }
+
+                if (data.status === 'Failed') {
+                    errorLine.textContent = data.errorMessage ?? 'Run failed.';
+                    return;
+                }
+
+                setTimeout(poll, 3000);
+            } catch (err) {
+                console.error('Status poll failed, retrying', err);
+                setTimeout(poll, 3000);
+            }
+        }
+
+        poll();
+    </script>
+}
